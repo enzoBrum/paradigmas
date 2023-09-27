@@ -11,9 +11,8 @@
 using namespace std;
 
 struct DLX {
-  DLX(vector<vector<int>>& matrix, vector<bool>& secondary) {
+  DLX(vector<vector<int>>& matrix) {
     this->matrix = matrix;
-    this->sec = secondary;
     this->N = matrix.size();
     this->M = matrix[0].size();
     this->solutions.assign(N, -1);
@@ -61,7 +60,6 @@ struct DLX {
   vector<vector<int>> matrix;
   int N, M;
   vector<int> solutions;
-  vector<bool> sec;
 
   void init_matrix() {
     Node *curr = root;
@@ -70,11 +68,11 @@ struct DLX {
       Node *nd = new Node(id);
       nodes.push_back(nd);
 
-      if (sec[i]) {
-        nd->left = nd->right = nd->up = nd->down = nd;
-        cout << '1';
-        continue;
-      }
+      // if (sec[i]) {
+      //   nd->left = nd->right = nd->up = nd->down = nd;
+      //   cout << '1';
+      //   continue;
+      // }
       nd->left = curr;
       curr->right = nd;
       nd->up = nd;

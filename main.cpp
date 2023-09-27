@@ -1,6 +1,8 @@
 #include "dlx.h"
 #include <algorithm>
 #include <fstream>
+#include <map>
+#include<set>
 #include <numeric>
 using namespace std;
 
@@ -22,7 +24,41 @@ vector<int> areas_offsets;
 vector<vector<pair<int, int>>> matrix;
 vector<vector<int>> bin_matrix;
 vector<Cell> cells;
-vector<bool> secondary;
+vector<vector<int>> expected;
+
+bool validate(vector<vector<int>>& ans) {
+  for (int i = 1; i < ans.size(); ++i) {
+    for (int j = 0; j < ans[0].size(); ++j) {
+      if (ans[i][j] == ans[i-1][j]) return false;
+    }
+  }
+
+  for (int i = 0; i < ans.size(); ++i) {
+    for (int j = 1; j < ans[0].size(); ++j) {
+      if (ans[i][j] == ans[i][j-1]) return false;
+    }
+  }
+
+  map<int, set<int>> regions;
+  for (int i = 0; i < ans.size(); ++i)
+    for (int j = 0; j < ans[0].size(); ++j)
+      regions[matrix[i][j].second].insert(ans[i][j]);
+
+  for (auto&[k, v] : regions)
+    if (v.size() != areas[k]) return false;
+
+  for (int i = 1; i < ans.size(); ++i) {
+    for (int j = 0; j < ans[0].size(); ++j) {
+      if (ans[i][j] > ans[i-1][j] && matrix[i][j].second == matrix[i-1][j].second)
+        return false;
+    }
+  }
+
+  return true;
+}
+
+
+
 
 void read_file(const string& path) {
   ifstream file(path);
@@ -39,6 +75,7 @@ void read_file(const string& path) {
   file.ignore(1024, file.widen('\n'));
 
   matrix.assign(size, vector<pair<int,int>>(depth));
+  expected.assign(size, vector<int>(depth));
 
   for (int i = 0; i < size; ++i) {
     for (int j = 0; j < depth; ++j) {
@@ -75,6 +112,12 @@ void read_file(const string& path) {
     areas_offsets.push_back(curr);
     curr += n;
   }
+
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      file >> expected[i][j];
+    }
+  }
 }
 
 void create_binary_matrix() {
@@ -96,7 +139,6 @@ void create_binary_matrix() {
   int num_cols = N*M + 2*squared_areas + sum_areas + 2*squared_areas;
 
   bin_matrix.assign(num_rows, vector<int>(num_cols, 0));
-  secondary.assign(num_cols, false);
   cells.assign(num_rows, Cell());
 
 
@@ -128,7 +170,6 @@ void create_binary_matrix() {
   int curr_row = 0;
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
         
@@ -158,7 +199,6 @@ void create_binary_matrix() {
   vector<int> last_offset(M, 0);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
         if (!i) continue;
@@ -196,7 +236,6 @@ void create_binary_matrix() {
   last_offset.assign(M, 0);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
 
@@ -220,17 +259,36 @@ void create_binary_matrix() {
   }
 
 
+  int i = 0;
+  while (i < num_rows) {
+    auto& cell = cells[i];
+    
+    if (matrix[cell.i][cell.j].first == -1) {
+      ++i;
+      continue;
+    };
+
+    for (int k = 0; k < areas[matrix[cell.i][cell.j].second]; ++k) {
+      auto& cell_to_erase = cells[i + k];
+      if (cell_to_erase.value != matrix[cell.i][cell.j].first)
+        for (int j = 0; j < num_cols; ++j) {
+          if (bin_matrix[i + k][j])
+            bin_matrix[i + k][j] = 0;
+      }
+    }
+    i += areas[matrix[cell.i][cell.j].second];
+  }
+
 }
 
 void print_bin_matrix() {
-  for (int i = 0; i < bin_matrix.size(); ++i) {
+  for (int i = 0; i < bin_matrix.size() && i <cells.size(); ++i) {
     cout << cells[i].value << '(' << cells[i].i << ',' << cells[i].j << ") --> ";
     for (auto& m : bin_matrix[i])
       cout << m;
     cout << '\n';
   }
 }
-
 
 
 int main(int argc, char *argv[]) {
@@ -240,10 +298,11 @@ int main(int argc, char *argv[]) {
   }
 
   read_file(argv[1]);
+  // read_file("input");
   create_binary_matrix();
   // print_bin_matrix();
 
-  DLX d(bin_matrix, secondary);
+  DLX d(bin_matrix);
   d.search(0);
   auto solutions  = d.solutions;
 
@@ -262,5 +321,10 @@ int main(int argc, char *argv[]) {
       cout << n << ' ';
     cout << '\n';
   }
+  if (validate(ans))
+    cout << "Validation: OK\n";
+  else
+    cout << "Validation: NOT OK\n";
 
+  cout << (expected == ans) << '\n';
 }
