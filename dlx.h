@@ -1,6 +1,7 @@
 #ifndef DLX_HPP
 #define DLX_HPP
 
+#include<algorithm>
 #include <ostream>
 #include <stack>
 #include <iostream>
@@ -10,7 +11,7 @@
 using namespace std;
 
 struct DLX {
-  DLX(vector<vector<int>>& matrix, vector<vector<bool>>& secondary) {
+  DLX(vector<vector<int>>& matrix, vector<bool>& secondary) {
     this->matrix = matrix;
     this->sec = secondary;
     this->N = matrix.size();
@@ -60,15 +61,20 @@ struct DLX {
   vector<vector<int>> matrix;
   int N, M;
   vector<int> solutions;
-  vector<vector<bool>> sec;
+  vector<bool> sec;
 
   void init_matrix() {
     Node *curr = root;
-    for (int i = 0; i < M-1; ++i) {
+    for (int i = 0; i < M; ++i) {
       string id; id.push_back('A' + i);
       Node *nd = new Node(id);
       nodes.push_back(nd);
 
+      if (sec[i]) {
+        nd->left = nd->right = nd->up = nd->down = nd;
+        cout << '1';
+        continue;
+      }
       nd->left = curr;
       curr->right = nd;
       nd->up = nd;
@@ -80,9 +86,6 @@ struct DLX {
     root->left = curr;
 
     string id; id.push_back('A' + M - 1);
-    Node *nd = new Node(id);
-    nd->up = nd->left = nd->right = nd->down = nd;
-    nodes.push_back(nd);
 
 
     for (int i = 0; i < N; ++i) {
@@ -130,11 +133,12 @@ struct DLX {
 
 
   void print_solution() {
+    sort(solutions.begin(), solutions.end());
     for (auto& row : solutions) {
-      if (row == -1) break;
+      if (row == -1) continue;;
 
       for (auto& n : matrix[row])
-        cout << n << '\t';
+        cout << n;
 
       cout << '\n';
     }
@@ -188,7 +192,7 @@ struct DLX {
   bool search(int k) {
     if (root->right == root) {
       cout << "FOUND SOLUTION\n";
-      print_solution();
+      // print_solution();
       return true;
     } 
 

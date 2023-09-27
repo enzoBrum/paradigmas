@@ -22,7 +22,7 @@ vector<int> areas_offsets;
 vector<vector<pair<int, int>>> matrix;
 vector<vector<int>> bin_matrix;
 vector<Cell> cells;
-vector<vector<bool>> secondary;
+vector<bool> secondary;
 
 void read_file(const string& path) {
   ifstream file(path);
@@ -32,6 +32,8 @@ void read_file(const string& path) {
   file >> size;
   file.ignore(1024, file.widen(' '));
   file >> depth;
+
+  depth = size;
 
   file.ignore(1024, file.widen('\n'));
   file.ignore(1024, file.widen('\n'));
@@ -94,7 +96,7 @@ void create_binary_matrix() {
   int num_cols = N*M + 2*squared_areas + sum_areas + 2*squared_areas;
 
   bin_matrix.assign(num_rows, vector<int>(num_cols, 0));
-  secondary.assign(num_rows, vector<bool>(num_cols, false));
+  secondary.assign(num_cols, false);
   cells.assign(num_rows, Cell());
 
 
@@ -126,7 +128,7 @@ void create_binary_matrix() {
   int curr_row = 0;
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[i][j] = true;
+      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
         
@@ -144,12 +146,19 @@ void create_binary_matrix() {
     }
   }
 
+  for (int j = N*M; j < num_cols; ++j) {
+    vector<int> row(num_cols, 0);
+    row[j]  =1;
+    bin_matrix.push_back(row);
+  }
+
+
   // constraint 2.2
   curr_row = 0;
   vector<int> last_offset(M, 0);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[i][j] = true;
+      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
         if (!i) continue;
@@ -187,7 +196,7 @@ void create_binary_matrix() {
   last_offset.assign(M, 0);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < M; ++j) {
-      secondary[i][j] = true;
+      secondary[j] = true;
       for (int k = 0; k < areas[matrix[i][j].second]; ++k, curr_row++) {
         bin_matrix[curr_row][offset + k] = 1;
 
@@ -210,6 +219,7 @@ void create_binary_matrix() {
     }
   }
 
+
 }
 
 void print_bin_matrix() {
@@ -231,7 +241,26 @@ int main(int argc, char *argv[]) {
 
   read_file(argv[1]);
   create_binary_matrix();
+  // print_bin_matrix();
 
   DLX d(bin_matrix, secondary);
   d.search(0);
+  auto solutions  = d.solutions;
+
+  sort(solutions.begin(), solutions.end());
+
+  vector<vector<int>> ans(matrix.size(), vector<int>(matrix[0].size(), 0));
+  for (auto& r : solutions) {
+    if (r == -1 || r >= cells.size()) continue;
+
+    auto cell = cells[r];
+    ans[cell.i][cell.j] = cell.value;
+  }
+
+  for (auto& r : ans) {
+    for (auto& n : r)
+      cout << n << ' ';
+    cout << '\n';
+  }
+
 }
