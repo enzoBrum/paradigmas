@@ -194,7 +194,8 @@ struct DLX {
       return true;
     } 
 
-    Node *col = choose_column();
+    // Node *col = choose_column();
+    Node *col = root->right;
     cover(col);
 
     for (Node *r = col->down; r != col; r = r->down) {
