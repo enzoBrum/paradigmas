@@ -1,4 +1,5 @@
 #include "dlx.h"
+#include <cmath>
 #include <chrono>
 #include <algorithm>
 #include <fstream>
@@ -26,6 +27,7 @@ vector<vector<pair<int, int>>> matrix;
 vector<vector<int>> bin_matrix;
 vector<Cell> cells;
 vector<vector<pair<int, char>>> adj;
+vector<bool> sec;
 
 bool validate(vector<vector<int>>& ans) {
   for (int i = 0; i < ans.size(); ++i) {
@@ -104,15 +106,32 @@ void read_file(const string& path) {
     }
   }
 
-  file.ignore(1024, file.widen('\n'));
 
   
-  int a, b; char direction;
-  while (file >> a >> b >> direction && a!=-1){
-    if (a >= adj.size())
-      adj.resize(a+1);
-    
-    adj[a].emplace_back(b, direction);
+  int region_size = sqrt(size);
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size - 1; ++j) {
+      if (matrix[i][j].second == matrix[i][j+1].second) {
+        string d; file >> d;
+        int idx = i*size + j;
+        
+        if (idx >= adj.size())
+          adj.resize(idx+1);
+        adj[idx].emplace_back(j, d[0]);
+      }
+    }
+  }
+
+  for (int i = 0; i < size - 1; ++i) {
+    for (int j = 0; j < size; ++j) {
+      if (matrix[i][j].second == matrix[i+1][j].second) {
+        string d; file >> d;
+        int idx = i*size + j;
+        if (idx >= adj.size())
+          adj.resize(idx+1);
+        adj[idx].emplace_back(j, d[0]);
+      }
+    }
   }
 
   int curr = 0;
@@ -140,14 +159,15 @@ void create_binary_matrix() {
   int sum_areas = accumulate(areas.begin(), areas.end(), 0);
   int squared_areas = num_rows;
 
-  int num_cols = N*M + sum_areas + N*areas[0] + N*areas[0] + 2*squared_areas + 1000;
+  int num_cols = N*M + sum_areas + N*areas[0] + N*areas[0] + 2*squared_areas;
 
   bin_matrix.assign(num_rows, vector<int>(num_cols, 0));
   cells.assign(num_rows, Cell());
+  sec.assign(num_cols,false);
 
 
-  // constraint 1
-  // preenche cada célula pertencente a uma regia R com 1 em areas[R] linhas
+  //constraint 1
+  //preenche cada célula pertencente a uma regia R com 1 em areas[R] linhas
   int j = 0;
   int counter = 0;
   pair<int, int> curr_cell = {0,0};
@@ -214,10 +234,10 @@ void create_binary_matrix() {
 
   int old_offset = offset;
   while (offset != num_cols) {
-    vector<int> row(num_cols, 0);
-    row[offset] = 1;
-    bin_matrix.emplace_back(row);
-    offset++;
+    sec[offset++] = true;
+    // vector<int> tmp(num_cols,0);
+    // tmp[offset++] = 1;
+    // bin_matrix.emplace_back(tmp);
   }
   offset = old_offset;
 
@@ -242,7 +262,7 @@ void create_binary_matrix() {
         if (d == '>') {
           for (int l = k; l < areas[0]; ++l)
             bin_matrix[curr_row][next_offset + l] = 1;
-        } else {
+        } else if (d == '<') {
           for (int l = k; l >= 0; --l) {
             bin_matrix[curr_row][next_offset + l] = 1;
           }
@@ -275,7 +295,7 @@ void create_binary_matrix() {
         if (d == 'v') {
           for (int l = k; l < areas[0]; ++l)
             bin_matrix[curr_row][next_offset + l] = 1;
-        } else {
+        } else if (d == '^') {
           for (int l = k; l >= 0; --l) {
             bin_matrix[curr_row][next_offset + l] = 1;
           }
@@ -306,20 +326,18 @@ int main(int argc, char *argv[]) {
   read_file(argv[1]);
   // read_file("gen");
   create_binary_matrix();
-  // print_bin_matrix();
+  
+  if (argc > 2) {
+    print_bin_matrix();
+    return 0;
+  }
 
-  using namespace chrono;
-  auto start = high_resolution_clock::now();
-  DLX d(bin_matrix);
-  auto start2 = high_resolution_clock::now();
-  auto duration = duration_cast<seconds>(start2 - start);
-  cout << "Duration 1: " << duration.count() << endl;
-  cout.flush();
-  d.search(0);
-  auto end = high_resolution_clock::now();
-  auto duration2 = duration_cast<seconds>(end - start2);
-  cout << "Duration 1: " << duration.count() << endl;
-  cout.flush();
+  // using namespace chrono;
+  DLX d(bin_matrix, sec);
+  if (!(d.search(0))) {
+    cout << "NO SOLUTION\n";
+    return 0;
+  }
   auto solutions  = d.solutions;
 
   sort(solutions.begin(), solutions.end());
