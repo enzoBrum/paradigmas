@@ -1,0 +1,27 @@
+2023-10-12 23:47:03.768655428000 [186462(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:47:12.490492245000 [186568(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:51:16.726418692000 [187595(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:52:06.623526644000 [187904(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:52:45.691420540000 [188240(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [])
+2023-10-12 23:52:45.708864047000 [188240(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2023-10-12 23:53:07.720677392000 [188330(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:53:46.090669274000 [188616(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:54:59.017256317000 [189052(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Spec","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:54:59.028873062000 [189052(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2023-10-12 23:55:18.603224212000 [189309(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:55:37.648515171000 [189416(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:55:45.953892294000 [189416(ThreadId 9)] ERROR APP - user error (no stacktrace found.)
+2023-10-12 23:55:45.990253470000 [189416(ThreadId 9)] ERROR APP - user error (no stacktrace found.)
+2023-10-12 23:55:49.927868537000 [189416(ThreadId 9)] ERROR APP - user error (ExecResult not found.)
+2023-10-12 23:56:00.588895695000 [189539(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:56:06.216905049000 [189539(ThreadId 9)] ERROR APP - user error (no stacktrace found.)
+2023-10-12 23:56:06.263016443000 [189539(ThreadId 9)] ERROR APP - user error (no stacktrace found.)
+2023-10-12 23:56:09.638220482000 [189539(ThreadId 9)] ERROR APP - user error (ExecResult not found.)
+2023-10-12 23:56:13.547123153000 [189631(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:57:45.053670505000 [189631(ThreadId 8)] CRITICAL REQUEST - invalid HANDLE. eof.
+2023-10-12 23:57:58.572186810000 [190431(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:58:08.260101967000 [190431(ThreadId 8)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":14}
+2023-10-12 23:58:40.777246592000 [190431(ThreadId 8)] CRITICAL REQUEST - invalid HANDLE. eof.
+2023-10-12 23:58:48.303928497000 [190594(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])
+2023-10-12 23:59:29.748063013000 [190594(ThreadId 8)] CRITICAL REQUEST - invalid HANDLE. eof.
+2023-10-12 23:59:41.241922314000 [190778(ThreadId 9)] ERROR APP - user error (<getModule> loaded module can not find from path. </home/erb/repos/paradigmas_2/bar/app/Main.hs> [("Main","/home/erb/repos/paradigmas_2/bar/test/Spec.hs")])

@@ -234,10 +234,10 @@ void create_binary_matrix() {
 
   int old_offset = offset;
   while (offset != num_cols) {
-    sec[offset++] = true;
-    // vector<int> tmp(num_cols,0);
-    // tmp[offset++] = 1;
-    // bin_matrix.emplace_back(tmp);
+    // sec[offset++] = true;
+    vector<int> tmp(num_cols,0);
+    tmp[offset++] = 1;
+    bin_matrix.emplace_back(tmp);
   }
   offset = old_offset;
 
@@ -318,13 +318,13 @@ void print_bin_matrix() {
 
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    cout << "Uso: main <input>\n";
-    exit(0);
-  }
+  // if (argc < 2) {
+  //   cout << "Uso: main <input>\n";
+  //   exit(0);
+  // }
 
-  read_file(argv[1]);
-  // read_file("gen");
+  // read_file(argv[1]);
+  read_file("gen2");
   create_binary_matrix();
   
   if (argc > 2) {
@@ -334,11 +334,21 @@ int main(int argc, char *argv[]) {
 
   // using namespace chrono;
   DLX d(bin_matrix, sec);
+  // vector<vector<int>> b = {
+  //   {1,0,0,0},
+  //   {0,0,0,0},
+  //   {0,0,0,0},
+  //   {1,0,1,0}
+  // };
+  // vector<bool> s =  {false,false,false,false};
+  // DLX d(b, s);
   if (!(d.search(0))) {
     cout << "NO SOLUTION\n";
     return 0;
   }
   auto solutions  = d.solutions;
+  // for (auto& r : solutions)
+  // cout << r << '\n';
 
   sort(solutions.begin(), solutions.end());
 
@@ -355,9 +365,9 @@ int main(int argc, char *argv[]) {
       cout << n << ' ';
     cout << '\n';
   }
-  if (validate(ans))
-    cout << "Validation: OK\n";
-  else
-    cout << "Validation: NOT OK\n";
+  // if (validate(ans))
+  //   cout << "Validation: OK\n";
+  // else
+  //   cout << "Validation: NOT OK\n";
 
 }

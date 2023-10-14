@@ -3,7 +3,7 @@ import Control.Monad.ST
 import  Data.Array.ST
 import Data.Array ()
 import Data.STRef
-
+import Debug.Trace
 
 
 data Node s = Node { 
@@ -36,22 +36,39 @@ addToList val nd = do
   return nd
 
 
+debug :: Node s -> ST s()
+debug nd = do
+  traceM ("id "++ show (value nd))
+
+  l <- readSTRef (left nd)
+  traceM ("left " ++show (value l))
+  r <- readSTRef (right nd)
+  traceM ("right " ++ show (value r))
+
 testNode :: [Int]
 testNode = runST $ do
-  ref <- newList 10
-  addToList 20 ref
+  l <- newList 0
+  r <- newList 1
+  u <- newList 2
+  d <- newList 3
 
-  left_nd <- readSTRef $ left ref
-  addToList 40 left_nd
-  addToList 30 ref
+  writeSTRef (left l) r
+  writeSTRef (right l) u
 
-  left_nd2 <- readSTRef $ left ref
+  debug l
+
+  writeSTRef (right u) d
+  writeSTRef (right u) l
+
+  abc <- readSTRef (right l)
+  abcd <- readSTRef (right abc)
+
+  traceM (show (value abcd))
+    
+
   
-  writeSTRef (right ref) left_nd
 
-  right_nd <- readSTRef $ right ref
-
-  return [ value ref, value left_nd, value right_nd, value left_nd2 ]
+  return [ 0 ]
   
 
 main :: IO()
