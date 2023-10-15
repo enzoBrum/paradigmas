@@ -158,9 +158,10 @@ void create_binary_matrix() {
   int M = matrix[0].size();
   int sum_areas = accumulate(areas.begin(), areas.end(), 0);
   int squared_areas = num_rows;
-
+  cout << "sum_areas: " << sum_areas << '\n';
+  cout << "sq_areas: " << squared_areas << '\n';
   int num_cols = N*M + sum_areas + N*areas[0] + N*areas[0] + 2*squared_areas;
-
+  cout << "num_cols: " << num_cols << '\n';
   bin_matrix.assign(num_rows, vector<int>(num_cols, 0));
   cells.assign(num_rows, Cell());
   sec.assign(num_cols,false);
@@ -308,7 +309,7 @@ void create_binary_matrix() {
 }
 
 void print_bin_matrix() {
-  for (int i = 0; i < bin_matrix.size() && i <cells.size(); ++i) {
+  for (int i = 0; i < bin_matrix.size(); ++i) {
     // cout << cells[i].value << '(' << cells[i].i << ',' << cells[i].j << ") --> ";
     for (auto& m : bin_matrix[i])
       cout << m;
@@ -324,7 +325,7 @@ int main(int argc, char *argv[]) {
   // }
 
   // read_file(argv[1]);
-  read_file("gen2");
+  read_file("input_sudoku");
   create_binary_matrix();
   
   if (argc > 2) {

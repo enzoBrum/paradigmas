@@ -1,4 +1,4 @@
-module Main (main) where
+module Dlx (dancingLinks) where
 import Data.List (intercalate)
 import Control.Monad.ST
 -- import qualified Data.Array as Array
@@ -200,12 +200,22 @@ uncover col = do
 searchCol :: Node s -> Int -> Node s -> Node s -> ST s([Int], Bool)
 searchCol root k col curr 
     | curr == col = do
+        traceM "Biz"
         uncover col
         return ([], False)
     | otherwise = do
+        traceM (show k ++ " - SearchCol " ++ show ((numRow curr), (idNode curr)))
         rightNode <- readSTRef (right curr)
+        traceM (show k ++ " - Right " ++ show ((numRow rightNode), (idNode rightNode)))
         h <- readSTRef (header rightNode)
-        iterateNodes rightNode curr (readSTRef . right) (\nd -> readSTRef (header nd) >>= \nd2 -> cover nd2)
+        traceM (show k ++ " - Header " ++ show ((numRow h), (idNode h)))
+        -- iterateNodes rightNode curr (readSTRef . right) (\nd -> readSTRef (header nd) >>= \nd2 -> cover nd2)
+        iterateNodes rightNode curr (readSTRef . right) (\nd -> do
+            traceM ("NODE " ++ show ((numRow nd), (idNode nd)))
+            hd <- readSTRef(header nd)
+            traceM ("HEADER-COVER " ++ show ((numRow hd), (idNode hd)))
+            cover hd
+            )
         
         (solutions, found) <- search root k
 
@@ -213,9 +223,16 @@ searchCol root k col curr
             return ( numRow curr : solutions, True )
         else do
             leftNode <- readSTRef (left curr)
-            iterateNodes leftNode curr ( readSTRef . left ) (\nd -> readSTRef (header nd) >>= \nd2 -> uncover nd2)
+            -- iterateNodes leftNode curr ( readSTRef . left ) (\nd -> readSTRef (header nd) >>= \nd2 -> uncover nd2)
+            iterateNodes leftNode curr (readSTRef . left) (\nd -> do
+                traceM ("NODE-UNCOVER " ++ show ((numRow nd), (idNode nd)))
+                hd <- readSTRef(header nd)
+                traceM ("HEADER-UNCOVER " ++ show ((numRow hd), (idNode hd)))
+                uncover hd
+                )
 
             newCurr <- readSTRef (down curr)
+            traceM ("NEW-CURR " ++ show ((numRow newCurr), (idNode newCurr)))
             searchCol root k col newCurr
                             
     
@@ -223,10 +240,12 @@ searchCol root k col curr
 search :: Node s -> Int -> ST s ([Int], Bool)
 search root k = do
     col <- readSTRef (right root)
+    traceM (show k ++ " - Column " ++ show ((numRow col), (idNode col)))
     if root == col then return ([], True)
     else do
         cover col
         d <- readSTRef (down col)
+        traceM (show ((numRow d), (idNode d)))
         searchCol root (k+1) col =<< readSTRef (down col)
 
 
@@ -234,18 +253,7 @@ dancingLinks :: [[Int]] -> [Bool] -> [[Int]]
 dancingLinks matrix secondary = runST $ do
     let arrMatrix = convertToMatrix matrix
     root <- initDancingLinks arrMatrix secondary
+    -- return [[1]]
     (solutions, found) <- search  root 0
+    -- traceM (show found)
     return [matrix!!row | row <- solutions]
-
-main :: IO ()
-main = do
-    let matrix = [
-            [1, 0, 1,0],
-            [0, 0, 0,0],
-            [0, 1, 0,0],
-            [1, 0, 1,0]
-            ]
-    
-    let secondary = [False, False, False, False]
-
-    putStrLn $ unlines $ map (intercalate "" . map show) (dancingLinks matrix secondary)
