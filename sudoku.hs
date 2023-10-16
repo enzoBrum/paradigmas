@@ -1,6 +1,6 @@
 module Main (main) where
 import Dlx
-import Data.List (intercalate, sort)
+import Data.List (intercalate, sort, find)
 import System.IO
 import System.Environment
 import Debug.Trace
@@ -56,7 +56,8 @@ readComparisons matrix i j
                 (Just rightDir, Just downDir) -> Map.insert (getIndex1D size i j) [rightDir, downDir] compMap
                 (Just rightDir, _)            -> Map.insert (getIndex1D size i j) [rightDir] compMap
                 (_, Just downDir)             -> Map.insert (getIndex1D size i j) [downDir] compMap
-                (_,_)                         -> Map.insert (getIndex1D size i j) [] compMap
+                -- (_,_)                         -> Map.insert (getIndex1D size i j) [] compMap
+                (_,_)                         -> compMap
         
         Map.union mp (readComparisons matrix i (j+1))
     where 
@@ -127,27 +128,14 @@ Ex:
     0000'0010
     0000'0001
 -}
-{-
-0 1 2 3     --> 0 --> 0
-4 5 6 7     --> 0 
-8 9 10 11   --> 1 --> 1
-12 13 14 15 --> 1
-16 17 18 19 --> 0 --> 2
-20 21 22 23 --> 0
-24 25 26 27 --> 1 --> 3
-28 29 30 31 --> 1
-32 33 34 35 --> 2 --> 4
-36 37 38 39 --> 2
--}
 constraintGroup :: Int -> Int -> Int
 constraintGroup n i = do
     let one = div i n
     let cell_i = div one n
     let cell_j = mod one n
-    
-    let region_size = floor (sqrt $ fromIntegral n)
 
-    let region_num = (div cell_i region_size) + (div cell_j region_size)
+    let region_line_size = floor (sqrt $ fromIntegral n)
+    let region_num = (div cell_i region_line_size)*region_line_size + (div cell_j region_line_size)
     
     let k = mod i n
 
@@ -213,6 +201,74 @@ constraintColumn n i = offset + k
         k = mod i n
 
 
+getOnesFromDirection :: Int -> Int -> Int -> Direction -> [Int]
+getOnesFromDirection n k offset d
+    | d == LEFT || d == UP = [offset..(offset + k)]
+    | otherwise = [(offset + k)..end_offset]
+        where 
+            end_offset = offset + n - 1
+
+
+-- Cada célula pode ser menor ou maior que a célula à direita que está na mesma região.main
+-- SeDigamos que uma célula x seja menor que x + 1, o valor de x será = 0010'1110,
+-- Senão, 0010'0011
+
+{-
+3 2
+
+0010'0011 = 3
+0000'0100 = 2
+
+2 3
+0100'1100 = 2
+0000'0010 = 3
+
+-}
+constraintHorizontalComparison :: Int -> Int -> MapDirection -> [Int]
+constraintHorizontalComparison n i mp = do
+    let one = div i n
+    let cell_i = div one n
+    let cell_j = mod one n
+    
+    let offset = n*n*4 + (div i n)*n
+    let k = mod i n
+    let next_offset = offset + n
+    case Map.lookup (cell_i*n + cell_j) mp of
+            Just dirList -> case find (\x -> x == LEFT || x == RIGHT) dirList of
+                Just direction -> (offset + k) : (getOnesFromDirection n k next_offset direction)
+                Nothing -> [offset+k]
+            Nothing -> [offset+k]
+
+-- Cada célula pode ser menor ou maior que a célula abaixo que está na mesma região
+-- Digamos que uma célula y seja menor que y + 1, o valor de x será = 0010'1110,
+-- Senão, 0010'0011
+
+{-
+3 2
+4 1
+
+0010'0000'1110'0000 = 3
+0000'0100'0000'0111 = 2
+0000'0000'0001'0000 = 4
+0000'0000'0000'1000 = 1
+
+-}
+constraintVerticalComparison :: Int -> Int -> MapDirection -> [Int]
+constraintVerticalComparison n i mp = do
+    let one = div i n
+    let cell_i = div one n
+    let cell_j = mod one n
+    
+    let offset = n*n*4 + n*n*n + (div i n)*n
+    let k = mod i n
+    let next_offset = offset + n*n
+    case Map.lookup (cell_i*n + cell_j) mp of
+            Just dirList -> case find (\x -> x == UP || x == DOWN) dirList of
+                Just direction -> (offset + k) : (getOnesFromDirection n k next_offset direction)
+                Nothing -> [offset+k]
+            Nothing -> [offset+k]
+
+
 createListOfRow :: [Int] -> Int -> Int -> [Int]
 createListOfRow [] j num_cols 
     | j == num_cols = []
@@ -233,9 +289,20 @@ createRow matrix mp num_cols i = do
 
     let numCol = constraintColumn n i
 
+    let numComparisonHorizontal = constraintHorizontalComparison n i mp
+    let numComparisonVertical = constraintVerticalComparison n i mp
 
-    let ones_list =  sort [numCell, numGroup, numRow, numCol]
+
+    let ones_list =  sort ([numCell, numGroup, numRow, numCol] ++ numComparisonHorizontal ++ numComparisonVertical)
     (createListOfRow ones_list 0 num_cols, cell)
+
+
+createSecondaryRows :: Int -> Int -> Int -> [[Int]]
+createSecondaryRows n num_cols j
+    | one == num_cols = []
+    | otherwise = (createListOfRow [one] 0 num_cols) : (createSecondaryRows n num_cols (j+1))
+        where
+            one = n*n*2 + j 
 
 createRows :: [[Int]] -> MapDirection -> Int -> Int -> Int -> ([[Int]], [Cell])
 createRows matrix mp num_rows num_cols i
@@ -243,9 +310,9 @@ createRows matrix mp num_rows num_cols i
     | otherwise = do
         let (row, cell) = createRow matrix mp num_cols i
         let (rows, cells) = createRows matrix mp num_rows num_cols (i+1)
-        (row : rows, cell : cells)
+        ((row : rows), cell : cells)
 
-createBinaryMatrix :: [[Int]] -> MapDirection -> [[Int]]
+createBinaryMatrix :: [[Int]] -> MapDirection -> ([[Int]], [Cell])
 createBinaryMatrix matrix mp = do
     let n = length matrix
     let m = length (head matrix)
@@ -266,18 +333,34 @@ createBinaryMatrix matrix mp = do
     let num_cols = n*m + n*area_size + n*area_size + num_areas*area_size + 2*square_areas
     
     let (rows, cells) = createRows matrix mp num_rows num_cols 0
-    rows
+    (rows ++ (createSecondaryRows n num_cols 0), cells)
 
-readSudoku :: String -> IO ([[Int]])
+readSudoku :: String -> IO ([[Int]], [[Int]], [Cell])
 readSudoku filename = do
     file <- openFile filename ReadMode
     matrix <- readLines file
     let dMap = readComparisons matrix 0 0
-    let cells = createBinaryMatrix matrix dMap
-    return (cells)
+    let (bin_matrix, cells) = (createBinaryMatrix matrix dMap)
+    return (matrix, bin_matrix, cells)
 
+partitionList :: Int -> [Int] -> [[Int]]
+partitionList _ [] = []
+partitionList n xs
+    | n > 0 = take n xs : partitionList n (drop n xs)
+    | otherwise = []
 
+createSolutionMatrix :: [Int] -> Int -> [Cell] -> [[Int]]
+createSolutionMatrix solutions n cells = partitionList n flatMatrix
+    where 
+        flatMatrix = [(value x) | (x, index) <- zip cells [0..], elem index solutions]
 
+findSolution :: [[Int]] -> [[Int]] -> [Cell] -> Maybe([[Int]])
+findSolution matrix bin_matrix cells = do
+    let secondary = [False | _ <- [1..(length (head bin_matrix))]]
+    
+    case dancingLinks bin_matrix secondary of
+        Just solutions -> return $ createSolutionMatrix solutions (length matrix) cells
+        Nothing -> Nothing
     
 
 main :: IO ()
@@ -287,6 +370,14 @@ main = do
         putStrLn "Usage: sudoku <input-file>"
         return ()
     else do
-        l <- readSudoku (args!!0)
-        putStrLn (unlines $ map (intercalate "" . map show) (l))
-        return ()
+        (matrix, bin_matrix, cells) <- readSudoku (args!!0)
+
+        case findSolution matrix bin_matrix cells of
+            Just ans -> do        
+                putStrLn "Solução: "
+                putStrLn (unlines $ map (intercalate " " . map show) (ans))
+                putStrLn ("Comparação com input: " ++ (show $ matrix == ans))
+                return ()
+            Nothing -> do
+                putStrLn "Sem solução!"
+                return ()

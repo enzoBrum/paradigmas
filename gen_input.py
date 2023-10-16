@@ -18,7 +18,7 @@ matrix = [[0 for _ in range(9)] for __ in range(9)]
 
 for i in range(9):
     line = input().replace('[', '').replace(']', '')
-    line = [int(x) for x in line.split(',')]
+    line = [int(x) for x in line.split()]
     for j in range(9):
         matrix[i][j] = line[j]
 

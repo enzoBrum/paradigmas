@@ -29,6 +29,21 @@ vector<Cell> cells;
 vector<vector<pair<int, char>>> adj;
 vector<bool> sec;
 
+vector<vector<int>> mat() {
+  ifstream file("hsout");
+
+  vector<vector<int>> m;
+
+  string buf;
+  while (getline(file, buf)) {
+    vector<int> line;
+    for (auto& c : buf)
+      line.push_back(c - '0');
+    m.push_back(line);
+  }
+  return m;
+}
+
 bool validate(vector<vector<int>>& ans) {
   for (int i = 0; i < ans.size(); ++i) {
     vector<int> vec(ans[0].size(), 0);
@@ -319,13 +334,13 @@ void print_bin_matrix() {
 
 
 int main(int argc, char *argv[]) {
-  // if (argc < 2) {
-  //   cout << "Uso: main <input>\n";
-  //   exit(0);
-  // }
+  if (argc < 2) {
+    cout << "Uso: main <input>\n";
+    exit(0);
+  }
 
-  // read_file(argv[1]);
-  read_file("input_sudoku");
+  read_file(argv[1]);
+  // read_file("input_sudoku");
   create_binary_matrix();
   
   if (argc > 2) {
@@ -334,6 +349,15 @@ int main(int argc, char *argv[]) {
   }
 
   // using namespace chrono;
+  // auto m = mat();
+  // sec.assign(false, m[0].size());
+  // for (auto& r : m) {
+  //   for (auto& v : r)
+  //     cout << v;
+  //   cout << '\n';
+  // }
+  
+    
   DLX d(bin_matrix, sec);
   // vector<vector<int>> b = {
   //   {1,0,0,0},
