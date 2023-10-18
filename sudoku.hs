@@ -5,17 +5,31 @@ import System.IO
 import System.Environment
 import Debug.Trace
 import Data.Map qualified as Map
+
+-- Representa uma célula presente na matriz tabuleiro
 data Cell = Cell {
     i :: Int,
     j :: Int,
     value :: Int
 } deriving (Eq, Show)
 
+
+-- Direção da comparação
+-- A < B --> LEFT
+-- A > B --> RIGHT
+-- A ^ B --> UP
+-- A v B --> DOWN
+-- Em todos esses exemplos, A está sendo comparado com B e 
+-- Direction representa a direção da flecha
 data Direction = UP | DOWN | LEFT | RIGHT deriving (Eq, Show)
 
+-- Map no qual as direções estão armazenadas. O índice é dado
+-- pela fórmula i*n + j, de formo que cada célula no tabuleiro
+-- possui um índice único
 type MapDirection = Map.Map Int [Direction]
 
 
+-- Lê o conteúdo de um arquivo em uma matriz de inteiros
 readLines :: Handle -> IO ([[Int]])
 readLines file = do
     eof <- hIsEOF file
@@ -26,6 +40,9 @@ readLines file = do
         (readLines file) >>= (\lines -> return (lineList ++ lines))
 
 
+-- Dado uma célula (i, j), verifica se a célula (i, j+1) está
+-- na mesma região que a primeira. Se sim, faz uma comparação entre elas
+-- para definir a direção de comparação da célula (i,j). 
 lookRight :: [[Int]] -> Int -> Int -> Int -> Int -> Maybe(Direction)
 lookRight matrix i j size region_size
     | (mod (j+1) region_size) == 0 = Nothing
@@ -33,6 +50,9 @@ lookRight matrix i j size region_size
     | (matrix!!i!!j) > (matrix!!i!!(j+1)) = Just RIGHT
     | otherwise = Just LEFT
 
+-- Dado uma célula (i, j), verifica se a célula (i+1, j) está
+-- na mesma região que a primeira. Se sim, faz uma comparação entre elas
+-- para definir a direção de comparação da célula (i,j). 
 lookDown :: [[Int]] -> Int -> Int -> Int -> Int -> Maybe(Direction)
 lookDown matrix i j size region_size
     | (mod (i+1) region_size) == 0 = Nothing
@@ -40,10 +60,13 @@ lookDown matrix i j size region_size
     | (matrix!!i!!j) > (matrix!!(i+1)!!j) = Just DOWN
     | otherwise = Just UP
 
+
 getIndex1D :: Int -> Int -> Int -> Int
 getIndex1D size i j = i*size + j
 
 
+-- Recebe a matriz solução do sudoku e gera um mapa de 
+-- direções de comparação.
 readComparisons :: [[Int]] -> Int -> Int -> MapDirection
 readComparisons matrix i j 
     | i >= size = Map.empty :: MapDirection
@@ -222,7 +245,6 @@ getOnesFromDirection n k offset d
 2 3
 0100'1100 = 2
 0000'0010 = 3
-
 -}
 constraintHorizontalComparison :: Int -> Int -> MapDirection -> [Int]
 constraintHorizontalComparison n i mp = do
@@ -269,6 +291,9 @@ constraintVerticalComparison n i mp = do
             Nothing -> [offset+k]
 
 
+-- Dado uma lista de posições onde o 1 deve estar, 
+-- cria uma lista com 1's nessas posições e 0's no
+-- restante
 createListOfRow :: [Int] -> Int -> Int -> [Int]
 createListOfRow [] j num_cols 
     | j == num_cols = []
@@ -278,6 +303,7 @@ createListOfRow (one:ones_list) j num_cols
     | j == one = 1 : (createListOfRow  ones_list (j+1) num_cols)
     | otherwise = 0 : (createListOfRow (one:ones_list) (j+1) num_cols)
 
+-- cria uma linha da matriz binária
 createRow :: [[Int]] -> MapDirection -> Int -> Int -> ([Int], Cell)
 createRow matrix mp num_cols i = do
     let n = length matrix
@@ -297,6 +323,34 @@ createRow matrix mp num_cols i = do
     (createListOfRow ones_list 0 num_cols, cell)
 
 
+-- cria linhas secundárias da matriz binária. Isso é necessário
+-- devido ao fato de que as constraints de comparação nem sempre
+-- preencherão todas as colunas dedicadas a elas com 1.
+{-
+2 3
+
+0100'1100 = 2
+0000'0010 = 3
+
+Várias colunas ficaram sem 1. Como o Dancing Links precisa que
+haja um único 1 em cada coluna, adicionamos linhas com 1 em cada
+coluna destinada as constraints de comparação.
+
+O exemplo acima é transformado nisso:
+
+01001100
+00000010
+10000000
+01000000
+00100000
+00010000
+00001000
+00000100
+00000010
+00000001
+
+Devido à constraint da Célula, essas linhas extras não afetarão a solução encontrada.
+-}
 createSecondaryRows :: Int -> Int -> Int -> [[Int]]
 createSecondaryRows n num_cols j
     | one == num_cols = []
@@ -304,6 +358,7 @@ createSecondaryRows n num_cols j
         where
             one = n*n*2 + j 
 
+-- Cria as linhas presentes na matriz binária
 createRows :: [[Int]] -> MapDirection -> Int -> Int -> Int -> ([[Int]], [Cell])
 createRows matrix mp num_rows num_cols i
     | i == num_rows = ([], [])
@@ -342,6 +397,7 @@ readSudoku filename = do
     let dMap = readComparisons matrix 0 0
     let (bin_matrix, cells) = (createBinaryMatrix matrix dMap)
     return (matrix, bin_matrix, cells)
+
 
 partitionList :: Int -> [Int] -> [[Int]]
 partitionList _ [] = []
